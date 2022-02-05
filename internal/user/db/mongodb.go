@@ -33,6 +33,18 @@ func (d *db) Create(ctx context.Context, user user.User) (string, error) {
 	return "", fmt.Errorf("failed to convert objectId to hex. probably objId: %s", objId)
 }
 
+func (d *db) FindAll(ctx context.Context) (u []user.User, err error) {
+	cursor, err := d.collection.Find(ctx, bson.M{})
+	if cursor.Err() != nil {
+		return u, fmt.Errorf("failed to find all users due to error: %v", err)
+	}
+	if err = cursor.All(ctx, &u); err != nil {
+		return u, fmt.Errorf("failed to read all documents from cursor. error: %v", err)
+	}
+
+	return u, nil
+}
+
 func (d *db) FindOne(ctx context.Context, id string) (u user.User, err error) {
 	objId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -47,10 +59,10 @@ func (d *db) FindOne(ctx context.Context, id string) (u user.User, err error) {
 			// TODO: ErrEntityNotFound
 			return u, fmt.Errorf("not found")
 		}
-		return u, fmt.Errorf("failed to find one user by id: %s due to error: %s", id, err)
+		return u, fmt.Errorf("failed to find one user by id: %s due to error: %v", id, err)
 	}
 	if err := result.Decode(&u); err != nil {
-		return u, fmt.Errorf("failed to decode user(id: %s) from DB due to error: %s", id, err)
+		return u, fmt.Errorf("failed to decode user(id: %s) from DB due to error: %v", id, err)
 	}
 	return u, nil
 }
