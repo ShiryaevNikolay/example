@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -9,8 +10,11 @@ import (
 	"path/filepath"
 	"time"
 
+	author "github.com/ShiryaevNikolay/example/internal/author/db"
+	author2 "github.com/ShiryaevNikolay/example/internal/author"
 	"github.com/ShiryaevNikolay/example/internal/config"
 	"github.com/ShiryaevNikolay/example/internal/user"
+	"github.com/ShiryaevNikolay/example/pkg/client/postgresql"
 	"github.com/ShiryaevNikolay/example/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 )
@@ -22,7 +26,15 @@ func main() {
 
 	cfg := config.GetConfig()
 
-	
+	postgreSQLClient, err := postgresql.NewClient(context.TODO(), 3, cfg.Storage)
+	if err != nil {
+		logger.Fatalf("%v", err)
+	}
+	repository := author.NewRepository(postgreSQLClient, logger)
+
+	logger.Info("register user handler")
+	authorHandler := author2.NewHandler(repository, logger)
+	authorHandler.Register(router)
 
 	logger.Info("register user handler")
 	handler := user.NewHandler(logger)
