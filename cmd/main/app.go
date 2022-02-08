@@ -32,6 +32,8 @@ func main() {
 	}
 	repository := author.NewRepository(postgreSQLClient, logger)
 
+	repository := book.NewRepository(postgreSQLClient, logger)
+
 	logger.Info("register user handler")
 	authorHandler := author2.NewHandler(repository, logger)
 	authorHandler.Register(router)
